@@ -115,7 +115,6 @@ int main(int argc, char *argv[])
             printf("epoll failure\n");
             break;
         }
-        printf("epoll监听到的事件数量：%d\n", number);
         for (int i = 0; i < number; i++)
         {
             int sockfd = events[i].data.fd;
@@ -142,18 +141,15 @@ int main(int argc, char *argv[])
             // 处理异常情况
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
-                printf("出现了异常\n");
                 // 如果有一场情况直接关闭客户连接
                 users[sockfd].close_conn();
             }
             // 处理客户连接上接收到的数据
             else if (events[i].events & EPOLLIN)
             {
-                printf("客户连接上有读事件\n");
                 // 根据读的结果，决定将任务添加到线程池，还是关闭连接
                 if (users[sockfd].read())
                 {
-                    printf("添加任务到线程池\n");
                     pool->append(users+sockfd);
                 }
                 else

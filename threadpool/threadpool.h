@@ -151,7 +151,6 @@ void threadpool<T>::run()
         {
             continue;
         }
-        printf("取出队列中第一个任务开始处理\n");
         request->process();
     }
 }
