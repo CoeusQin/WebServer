@@ -159,7 +159,6 @@ int main(int argc, char *argv[])
             }
             else if (events[i].events & EPOLLOUT)
             {
-                // printf("客户连接上有写事件\n");
                 // 根据写的结果，决定是否关闭连接
                 if (!users[sockfd].write())
                 {
