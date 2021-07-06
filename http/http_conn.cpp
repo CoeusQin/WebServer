@@ -314,7 +314,7 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
     }
     else
     {
-        printf("opp! unknow header %s\n", text);
+        // printf("opp! unknow header %s\n", text);
     }
     return NO_REQUEST;
 }
@@ -340,7 +340,7 @@ http_conn::HTTP_CODE http_conn::process_read()
     {
         text = get_line(); // 读缓冲区的当前起点位置
         m_start_line = m_checked_idx;
-        printf("got 1 http line: %s\n", text);
+        // printf("got 1 http line: %s\n", text);
         switch (m_check_state)
         {
             case CHECK_STATE_REQUESTLINE:
