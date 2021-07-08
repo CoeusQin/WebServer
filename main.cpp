@@ -18,7 +18,7 @@
 
 #define MAX_FD 65535        // 最大文件描述符
 #define MAX_EVENT_NUMBER 10000      // 最大事件数
-#define TIMESLOT 2             //最小超时单位
+#define TIMESLOT 5             //最小超时单位
 
 //这三个函数在http_conn.cpp中定义，改变链接属性
 extern int addfd(int epollfd, int fd, bool one_shot);
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
                 if (ret == -1)
                 {
                     // handle the error
-                    printf("接受信号值失败\n");
+                    // printf("接受信号值失败\n");
                     continue;
                 }
                 else if (ret == 0)
@@ -254,13 +254,13 @@ int main(int argc, char *argv[])
                         {
                             case SIGALRM:
                             {
-                                printf("接收到超时信号！\n");
+                                // printf("接收到超时信号！\n");
                                 timeout = true;
                                 break;
                             }
                             case SIGTERM:
                             {
-                                printf("结束服务器！\n");
+                                // printf("结束服务器！\n");
                                 stop_server = true;
                             }
                         }
@@ -336,7 +336,7 @@ int main(int argc, char *argv[])
         }
         if (timeout)
         {
-            printf("最后处理定时事件\n");
+            // printf("最后处理定时事件\n");
             timer_handler();
             timeout = false;
         }
