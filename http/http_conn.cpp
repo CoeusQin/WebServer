@@ -247,7 +247,7 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     }
     *m_version++ = '\0';
     m_version += strspn(m_version, " \t");
-    if (strcasecmp(m_version, "HTTP/1.1") != 0)
+    if (strcasecmp(m_version, "HTTP/1.1") != 0 || (strcasecmp(m_version, "HTTP/1.0") != 0))
     {
         return BAD_REQUEST; // 此处只支持HTTP1.1版本的协议
     }
@@ -266,8 +266,8 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     {
         return BAD_REQUEST;
     }
-    if (strlen(m_url) == 1) // url为/
-        strcat(m_url, "welcome.html");
+    // if (strlen(m_url) == 1) // url为/
+    //     strcat(m_url, "welcome.html");
     m_check_state = CHECK_STATE_HEADER; // 请求行处理完毕，状态转移到解析头部信息
     return NO_REQUEST;
 }
@@ -295,7 +295,7 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
         text += strspn(text, " \t");
         if (strcasecmp(text, "keep-alive:") == 0)
         {
-            m_linger = true; // 是否保持连接
+            m_linger = false; // 是否保持连接
         }
     }
     // 处理Content-Length头部字段
@@ -485,12 +485,12 @@ bool http_conn::write()
             {
                 init();
                 modfd(m_epollfd, m_sockfd, EPOLLIN);
-                return true;
+                return false;
             }
             else
             {
                 modfd(m_epollfd, m_sockfd, EPOLLIN);
-                return false;
+                return true;
             }
         }
     }
@@ -543,7 +543,7 @@ bool http_conn::add_content_length( int content_len )
 //添加连接状态，通知浏览器端是保持连接还是关闭
 bool http_conn::add_linger()
 {
-    return add_response( "Connection: %s\r\n", ( m_linger == true ) ? "keep-alive" : "close" );
+    return add_response( "Connection: %s\r\n", "close" );
 }
 
 // 添加空行
