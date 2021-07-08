@@ -71,7 +71,6 @@ void timer_handler()
 //定时器回调函数，删除非活动连接在socket上的注册事件，并关闭
 void cb_func(client_data *user_data)
 {
-    // printf("定时器回调函数，超时后，关闭连接\n");
     epoll_ctl(epollfd, EPOLL_CTL_DEL, user_data->sockfd, 0);
     assert(user_data);
     close(user_data->sockfd);
@@ -222,7 +221,6 @@ int main(int argc, char *argv[])
 
                 //设置绝对超时时间
                 timer->expire = cur + 3 * TIMESLOT;
-                // printf("超时时间为：%lld\n", timer->expire);
                 //创建该连接对应的定时器，初始化为前述临时变量
                 users_timer[connfd].timer = timer;
                 //将该定时器添加到链表中
@@ -240,7 +238,7 @@ int main(int argc, char *argv[])
                 if (ret == -1)
                 {
                     // handle the error
-                    // printf("接受信号值失败\n");
+                    printf("接受信号值失败\n");
                     continue;
                 }
                 else if (ret == 0)
@@ -256,13 +254,13 @@ int main(int argc, char *argv[])
                         {
                             case SIGALRM:
                             {
-                                // printf("接收到超时信号！\n");
+                                printf("接收到超时信号！\n");
                                 timeout = true;
                                 break;
                             }
                             case SIGTERM:
                             {
-                                // printf("结束服务器！\n");
+                                printf("结束服务器！\n");
                                 stop_server = true;
                             }
                         }
@@ -338,7 +336,7 @@ int main(int argc, char *argv[])
         }
         if (timeout)
         {
-            // printf("最后处理定时事件\n");
+            printf("最后处理定时事件\n");
             timer_handler();
             timeout = false;
         }
