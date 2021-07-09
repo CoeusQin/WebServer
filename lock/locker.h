@@ -101,61 +101,65 @@ public:
 /**
  * 封装条件变量类
 */
-// class cond
-// {
-// private:
-//     pthread_mutex_t m_mutex;
-//     pthread_cond_t m_cond;
+class cond
+{
+private:
+    pthread_mutex_t m_mutex;
+    pthread_cond_t m_cond;
 
-// public:
-//     /**
-//      * 创建并初始化条件变量
-//     */
-//     cond();
-//     ~cond();
+public:
+    /**
+     * 创建并初始化条件变量
+    */
+    cond();
+    ~cond();
 
-//     // 等待条件变量
-//     bool wait()
-//     {
-//         int res = 0;
-//         pthread_mutex_lock(&m_mutex);
-//         res = pthread_cond_wait(&m_cond, &m_mutex);
-//         pthread_mutex_unlock(&m_mutex);
-//         return res == 0;
-//     }
-//     bool timewait(pthread_mutex_t *m_mutex, struct timespec t)
-//     {
-//         int ret = 0;
-//         pthread_mutex_lock(m_mutex);
-//         ret = pthread_cond_timedwait(&m_cond, m_mutex, &t);
-//         pthread_mutex_unlock(m_mutex);
-//         return ret == 0;
-//     }
-//     // 唤醒等待条件变量的线程
-//     bool signal()
-//     {
-//         return pthread_cond_signal(&m_cond) == 0;
-//     }
-// };
+    // 等待条件变量
+    bool wait()
+    {
+        int res = 0;
+        pthread_mutex_lock(&m_mutex);
+        res = pthread_cond_wait(&m_cond, &m_mutex);
+        pthread_mutex_unlock(&m_mutex);
+        return res == 0;
+    }
+    bool timewait(pthread_mutex_t *m_mutex, struct timespec t)
+    {
+        int ret = 0;
+        pthread_mutex_lock(m_mutex);
+        ret = pthread_cond_timedwait(&m_cond, m_mutex, &t);
+        pthread_mutex_unlock(m_mutex);
+        return ret == 0;
+    }
+    // 唤醒等待条件变量的线程
+    bool signal()
+    {
+        return pthread_cond_signal(&m_cond) == 0;
+    }
+    bool broadcast()
+    {
+        return pthread_cond_broadcast(&m_cond) == 0;
+    }
+};
 
-// cond::cond()
-// {
-//     if (pthread_mutex_init(&m_mutex, NULL) != 0)
-//     {
-//         throw std::exception();
-//     }
-//     if (pthread_cond_init(&m_cond, NULL) != 0)
-//     {
-//         // 构造函数出现问题，立即释放已经成功分配的资源
-//         pthread_mutex_destroy(&m_mutex);
-//         throw std::exception();
-//     }
-// }
+cond::cond()
+{
+    if (pthread_mutex_init(&m_mutex, NULL) != 0)
+    {
+        throw std::exception();
+    }
+    if (pthread_cond_init(&m_cond, NULL) != 0)
+    {
+        // 构造函数出现问题，立即释放已经成功分配的资源
+        pthread_mutex_destroy(&m_mutex);
+        throw std::exception();
+    }
+}
 
-// cond::~cond()
-// {
-//     pthread_mutex_destroy(&m_mutex);
-//     pthread_cond_destroy(&m_cond);
-// }
+cond::~cond()
+{
+    pthread_mutex_destroy(&m_mutex);
+    pthread_cond_destroy(&m_cond);
+}
 
 #endif
