@@ -4,6 +4,7 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "../log/log.h"
 
 #define BUFFER_SIZE 64
 //连接资源结构体成员需要用到定时器类
@@ -168,6 +169,8 @@ public:
             return;
         }
         // printf( "timer tick\n" );
+        LOG_INFO("%s", "timer tick");
+        Log::get_instance()->flush();
 
         //获取系统当前时间
         time_t cur = time( NULL );

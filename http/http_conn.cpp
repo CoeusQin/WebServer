@@ -1,4 +1,5 @@
 #include "http_conn.h"
+#include "../log/log.h"
 #include <fstream>
 #include <stdio.h>
 
@@ -315,6 +316,8 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
     else
     {
         // printf("opp! unknow header %s\n", text);
+        LOG_INFO("oop!unknow header: %s", text);
+        Log::get_instance()->flush();
     }
     return NO_REQUEST;
 }
@@ -341,6 +344,8 @@ http_conn::HTTP_CODE http_conn::process_read()
         text = get_line(); // 读缓冲区的当前起点位置
         m_start_line = m_checked_idx;
         // printf("got 1 http line: %s\n", text);
+        LOG_INFO("%s", text);
+        Log::get_instance()->flush();
         switch (m_check_state)
         {
             case CHECK_STATE_REQUESTLINE:
@@ -517,6 +522,8 @@ bool http_conn::add_response(const char* format, ...)
     m_write_idx += len;
     //清空可变参列表
     va_end(arg_list);
+    LOG_INFO("request:%s", m_write_buf);
+    Log::get_instance()->flush();
     return true;
 }
 

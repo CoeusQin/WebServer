@@ -96,6 +96,11 @@ public:
     {
         return pthread_mutex_unlock(&m_mutex) == 0; // 给互斥锁解锁
     }
+    
+    pthread_mutex_t *get()
+    {
+        return &m_mutex;
+    }
 };
 
 /**
@@ -111,8 +116,24 @@ public:
     /**
      * 创建并初始化条件变量
     */
-    cond();
-    ~cond();
+    cond()
+    {
+        if (pthread_mutex_init(&m_mutex, NULL) != 0)
+        {
+            throw std::exception();
+        }
+        if (pthread_cond_init(&m_cond, NULL) != 0)
+        {
+            // 构造函数出现问题，立即释放已经成功分配的资源
+            pthread_mutex_destroy(&m_mutex);
+            throw std::exception();
+        }
+    }
+    ~cond()
+    {
+    pthread_mutex_destroy(&m_mutex);
+    pthread_cond_destroy(&m_cond);
+    }
 
     // 等待条件变量
     bool wait()
@@ -142,24 +163,5 @@ public:
     }
 };
 
-cond::cond()
-{
-    if (pthread_mutex_init(&m_mutex, NULL) != 0)
-    {
-        throw std::exception();
-    }
-    if (pthread_cond_init(&m_cond, NULL) != 0)
-    {
-        // 构造函数出现问题，立即释放已经成功分配的资源
-        pthread_mutex_destroy(&m_mutex);
-        throw std::exception();
-    }
-}
-
-cond::~cond()
-{
-    pthread_mutex_destroy(&m_mutex);
-    pthread_cond_destroy(&m_cond);
-}
 
 #endif

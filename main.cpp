@@ -14,11 +14,15 @@
 #include "./lock/locker.h"
 #include "./threadpool/threadpool.h"
 #include "./http/http_conn.h"
+#include "./log/log.h"
 #include "./timer/lst_timer.h"
 
 #define MAX_FD 65535        // 最大文件描述符
 #define MAX_EVENT_NUMBER 10000      // 最大事件数
 #define TIMESLOT 5             //最小超时单位
+
+#define SYNLOG  //同步写日志
+//#define ASYNLOG //异步写日志
 
 //这三个函数在http_conn.cpp中定义，改变链接属性
 extern int addfd(int epollfd, int fd, bool one_shot);
@@ -75,6 +79,8 @@ void cb_func(client_data *user_data)
     assert(user_data);
     close(user_data->sockfd);
     http_conn::m_user_count--;
+    LOG_INFO("close fd %d", user_data->sockfd);
+    Log::get_instance()->flush();
 }
 
 // 打印错误信息函数
@@ -87,6 +93,13 @@ void show_error(int connfd, const char* info)
 
 int main(int argc, char *argv[])
 {
+#ifdef ASYNLOG
+    Log::get_instance()->init("ServerLog", 2000, 800000, 8); //异步日志模型
+#endif
+
+#ifdef SYNLOG
+    Log::get_instance()->init("ServerLog", 2000, 800000, 0); //同步日志模型
+#endif
     if (argc <= 2)
     {
         printf("usage: %s ip_address port_number\n", basename(argv[0]));
@@ -177,7 +190,7 @@ int main(int argc, char *argv[])
         int number = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
         if ((number < 0) && (errno != EINTR))
         {
-            printf("epoll failure\n");
+            LOG_ERROR("%s", "epoll failure\n");
             break;
         }
         for (int i = 0; i < number; i++)
@@ -194,15 +207,16 @@ int main(int argc, char *argv[])
                 int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addrlength);
                 if (connfd < 0)
                 {
-                    printf("errno is : %d\n", errno);
+                    LOG_ERROR("%s:errno is:%d", "accept error", errno);
                     continue;
                 }
                 if (http_conn::m_user_count >= MAX_FD)
                 {
                     show_error(connfd, "Internal server busy");
+                    LOG_ERROR("%s", "Internal server busy");
                     continue;
                 }
-                printf("客户端%s:%d连接成功\n", inet_ntoa(client_address.sin_addr), client_address.sin_port);
+                //printf("客户端%s:%d连接成功\n", inet_ntoa(client_address.sin_addr), client_address.sin_port);
                 // 初始化客户连接
                 users[connfd].init(connfd, client_address);
 
@@ -287,6 +301,8 @@ int main(int argc, char *argv[])
                 // 根据读的结果，决定将任务添加到线程池，还是关闭连接
                 if (users[sockfd].read())
                 {
+                    LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
+                    Log::get_instance()->flush();
                     //若监测到读事件，将该事件放入请求队列
                     pool->append(users+sockfd);
 
@@ -296,6 +312,8 @@ int main(int argc, char *argv[])
                     {
                         time_t cur = time(NULL);
                         timer->expire = cur + 3 * TIMESLOT;
+                        LOG_INFO("%s", "adjust timer once");
+                        Log::get_instance()->flush();
                         timer_lst.adjust_timer(timer);
                     }
                 }
@@ -315,12 +333,16 @@ int main(int argc, char *argv[])
                 // 根据写的结果，决定是否关闭连接
                 if (!users[sockfd].write())
                 {
+                    LOG_INFO("send data to the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
+                    Log::get_instance()->flush();
                     //若有数据传输，则将定时器往后延迟3个单位
                     //并对新的定时器在链表上的位置进行调整
                     if (timer)
                     {
                         time_t cur = time(NULL);
                         timer->expire = cur + 3 * TIMESLOT;
+                        LOG_INFO("%s", "adjust timer once");
+                        Log::get_instance()->flush();
                         timer_lst.adjust_timer(timer);
                     }
                 }
